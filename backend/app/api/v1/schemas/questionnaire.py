@@ -9,6 +9,7 @@ class QuestionDTO(BaseModel):
     id: str
     question: str
     type: QuestionType
+    order: int
 
     class Config:
         from_attributes = True

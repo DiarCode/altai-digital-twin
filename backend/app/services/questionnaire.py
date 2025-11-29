@@ -4,13 +4,25 @@ from prisma.models import QuestionnaireQuestion, QuestionnaireResponse
 from typing import List
 
 async def get_all_questions() -> List[QuestionnaireQuestion]:
-    return await client.questionnairequestion.find_many()
+    return await client.questionnairequestion.find_many(
+        order={
+            "order": "asc"
+        }
+    )
 
-async def create_question(text: str, q_type: QuestionType) -> QuestionnaireQuestion:
+async def get_question_by_order(order: int) -> QuestionnaireQuestion | None:
+    return await client.questionnairequestion.find_unique(
+        where={
+            "order": order
+        }
+    )
+
+async def create_question(text: str, q_type: QuestionType, order: int) -> QuestionnaireQuestion:
     return await client.questionnairequestion.create(
         data={
             "text": text,
-            "type": q_type
+            "type": q_type,
+            "order": order
         }
     )
 

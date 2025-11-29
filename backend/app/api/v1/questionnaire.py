@@ -17,19 +17,30 @@ def get_current_user(request: Request):
 class QuestionCreate(BaseModel):
     text: str
     type: QuestionType
+    order: int
 
 @router.post("/questions", response_model=QuestionDTO)
 async def create_question(
     question: QuestionCreate,
     user=Depends(get_current_user)
 ):
-    created = await questionnaire_service.create_question(question.text, question.type)
-    return QuestionDTO(id=created.id, question=created.text, type=created.type)
+    created = await questionnaire_service.create_question(question.text, question.type, question.order)
+    return QuestionDTO(id=created.id, question=created.text, type=created.type, order=created.order)
+
+@router.get("/questions/order/{order}", response_model=QuestionDTO)
+async def get_question_by_order(
+    order: int,
+    user=Depends(get_current_user)
+):
+    question = await questionnaire_service.get_question_by_order(order)
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return QuestionDTO(id=question.id, question=question.text, type=question.type, order=question.order)
 
 @router.get("/questions", response_model=List[QuestionDTO])
 async def get_questions(user=Depends(get_current_user)):
     questions = await questionnaire_service.get_all_questions()
-    return [QuestionDTO(id=q.id, question=q.text, type=q.type) for q in questions]
+    return [QuestionDTO(id=q.id, question=q.text, type=q.type, order=q.order) for q in questions]
 
 @router.post("/questions/{question_id}/answer")
 async def answer_question(

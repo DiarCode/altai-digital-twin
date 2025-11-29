@@ -27,6 +27,7 @@ model QuestionnaireQuestion {
   id        String   @id @default(cuid())
   text      String
   type      QuestionnaireQuestionType
+  order     Int      @unique
   createdAt DateTime @default(now()) @map("created_at")
 
   responses QuestionnaireResponse[]
