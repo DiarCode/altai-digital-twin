@@ -40,6 +40,7 @@ model User {
   userAnswers       UserAnswer[]
   memoryChunks      MemoryChunk[]
   themeSummaries    ThemeSummary[]
+  questionnaireResponses QuestionnaireResponse[]
 }
 
 model InterviewSession {
@@ -139,4 +140,32 @@ model PersonaSnapshot {
   createdAt DateTime @default(now()) @map("created_at")
 
   user      User     @relation(fields: [userId], references: [id])
+}
+
+enum QuestionnaireQuestionType {
+  LIKERT
+  AUDIO
+}
+
+model QuestionnaireQuestion {
+  id        String   @id @default(cuid())
+  text      String
+  type      QuestionnaireQuestionType
+  createdAt DateTime @default(now()) @map("created_at")
+
+  responses QuestionnaireResponse[]
+}
+
+model QuestionnaireResponse {
+  id         String   @id @default(cuid())
+  userId     Int      @map("user_id")
+  questionId String   @map("question_id")
+  
+  likertValue Int?
+  audioPath   String?
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User                  @relation(fields: [userId], references: [id])
+  question   QuestionnaireQuestion @relation(fields: [questionId], references: [id])
 }

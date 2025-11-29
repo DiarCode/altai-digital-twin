@@ -22,6 +22,9 @@ class UserOut(CamelModel):
     birthdate: date | None
     created_at: str
 
+    class Config:
+        from_attributes = True
+
 
 class Token(CamelModel):
     access_token: str

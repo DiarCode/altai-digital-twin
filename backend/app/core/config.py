@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_NAME: str = "altai-digital-twin"
@@ -24,9 +24,23 @@ class Settings(BaseSettings):
     LLM_API_KEY: str | None = None
     AVATAR_API_URL: str | None = None
     AVATAR_API_KEY: str | None = None
+
+    # S3 Settings
+    S3_BUCKET_NAME: str = "altai-digital-twin-audio"
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_REGION: str = "us-east-1"
+
+    # MinIO / .env compatibility
+    S3_ENDPOINT: str | None = None
+    S3_ACCESS_KEY: str | None = None
+    S3_SECRET_KEY: str | None = None
+    S3_REGION: str | None = None
+
     # Add other settings and secrets here
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()

@@ -13,9 +13,13 @@ class CookieAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         # Extract token from cookie
         token = request.cookies.get(settings.COOKIE_NAME)
+        
         if token:
+            try:
                 user = await auth_service.get_user_from_token(token)
                 request.state.user = user
+            except Exception:
+                request.state.user = None
         else:
             request.state.user = None
 
