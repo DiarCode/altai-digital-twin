@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "altai-digital-twin-backend"
+version = "0.1.0"
+description = "Backend for Altai Digital Twin — Python + FastAPI + Prisma"
+
+[project.dependencies]
+python-dotenv = "*"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+prisma = "*"
+psycopg[binary] = "*"
+pytest = {optional = true}
+
+[tool.setuptools.packages.find]
+where = ["app"]

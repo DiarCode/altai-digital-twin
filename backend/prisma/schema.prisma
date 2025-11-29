@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+model MLModel {
+  id        Int     @id @default(autoincrement())
+  name      String
+  version   String
+  createdAt DateTime @default(now())
+}
+
+model VectorDocument {
+  id        Int     @id @default(autoincrement())
+  name      String
+  content   String
+  # Vector column depends on the chosen DB / extension
+  # You can use pgvector with Postgres, or a separate vector DB
+  createdAt DateTime @default(now())
+}
