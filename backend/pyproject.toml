@@ -19,6 +19,9 @@ dependencies = [
     "pyjwt",
     "qdrant-client",
     "uv",
+    "boto3>=1.41.5",
+    "python-multipart>=0.0.20",
+    "pydantic-settings>=2.12.0",
 ]
 
 [project.optional-dependencies]

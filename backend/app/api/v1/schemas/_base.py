@@ -10,5 +10,5 @@ def to_camel(string: str) -> str:
 class CamelModel(BaseModel):
     class Config:
         alias_generator = to_camel
-        allow_population_by_field_name = True
-        orm_mode = True
+        populate_by_name = True
+        from_attributes = True
