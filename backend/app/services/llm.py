@@ -1,19 +1,26 @@
 from __future__ import annotations
-from typing import Any
+
+from langchain_google_genai import (
+    ChatGoogleGenerativeAI,
+    GoogleGenerativeAIEmbeddings,
+)
+
+# Models configurable here
+GEMINI_CHAT_MODEL = "gemini-3-pro-preview"
+GEMINI_EMBEDDING_MODEL = "text-embedding-004"
 
 
-class LLMService:
+def get_llm_and_embeddings() -> tuple[ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings]:
     """
-    Placeholder for a Large Language Model service wrapper.
-    Implement integrations with OpenAI, Claude, or other LLM providers here.
+    Returns a configured chat model and embedding model.
+
+    Requires GOOGLE_API_KEY (and related config) in the environment.
     """
-
-    def __init__(self, config: dict | None = None):
-        self.config = config or {}
-
-    async def complete(self, prompt: str, model: str | None = None, **kwargs) -> Any:
-        """
-        Run a completion using an LLM provider.
-        Return provider dependent response. Not implemented in placeholder.
-        """
-        raise NotImplementedError("LLMService.complete not implemented")
+    llm = ChatGoogleGenerativeAI(
+        model=GEMINI_CHAT_MODEL,
+        temperature=0.3,
+    )
+    embedder = GoogleGenerativeAIEmbeddings(
+        model=GEMINI_EMBEDDING_MODEL,
+    )
+    return llm, embedder
