@@ -7,3 +7,7 @@ pytest
 pydantic
 httpx
 pytest-asyncio
+bcrypt
+pyjwt
+qdrant-client
+uv

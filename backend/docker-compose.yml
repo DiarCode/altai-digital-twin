@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   db:
-    image: ankane/pgvector:latest
+    image: postgres:15
     environment:
       POSTGRES_USER: altai
       POSTGRES_PASSWORD: altai
@@ -12,12 +12,14 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
 
-  # Optional vector DB or ML model store (Milvus / Weaviate / Redis) - replace as needed
-  # vector_db:
-  #   image: milvusdb/milvus:latest
-  #   ports:
-  #     - "19530:19530"
-  #     - "19121:19121"
+  # Optional vector DB using Qdrant - this is our chosen vector store
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
 
 volumes:
   db-data:
+  qdrant-data:

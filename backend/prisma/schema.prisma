@@ -8,24 +8,45 @@ datasource db {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  email     String  @unique
-  name      String?
-  createdAt DateTime @default(now())
+  id                    Int                    @id @default(autoincrement())
+  username              String                 @unique
+  password              String
+  gender                String
+  birthdate             DateTime
+  createdAt             DateTime               @default(now())
+  userOnboardingAnswers UserOnboardingAnswer[]
 }
 
-model MLModel {
-  id        Int     @id @default(autoincrement())
-  name      String
-  version   String
-  createdAt DateTime @default(now())
+model OnboardingQuestion {
+  id        Int                @id @default(autoincrement())
+  question  String
+  createdAt DateTime           @default(now())
+  answers   OnboardingAnswer[]
 }
 
-model VectorDocument {
-  id        Int     @id @default(autoincrement())
-  name      String
-  content   String
-  # Vector column depends on the chosen DB / extension
-  # You can use pgvector with Postgres, or a separate vector DB
-  createdAt DateTime @default(now())
+model OnboardingAnswer {
+  id                    Int                    @id @default(autoincrement())
+  answer                String
+  createdAt             DateTime               @default(now())
+  onboardingQuestionId  Int
+  onboardingQuestion    OnboardingQuestion     @relation(fields: [onboardingQuestionId], references: [id])
+  userOnboardingAnswers UserOnboardingAnswer[]
+}
+
+model UserOnboardingAnswer {
+  id                 Int                @id @default(autoincrement())
+  userId             Int
+  onboardingAnswerId Int
+  createdAt          DateTime           @default(now())
+  user               User               @relation(fields: [userId], references: [id])
+  onboardingAnswer   OnboardingAnswer   @relation(fields: [onboardingAnswerId], references: [id])
+  questionAnalyses   QuestionAnalysis[]
+}
+
+model QuestionAnalysis {
+  id                 Int                  @id @default(autoincrement())
+  userAnswerId       Int
+  analysisData       String
+  createdAt          DateTime             @default(now())
+  userAnswer         UserOnboardingAnswer @relation(fields: [userAnswerId], references: [id])
 }
