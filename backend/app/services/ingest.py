@@ -27,7 +27,6 @@ async def ingest_user_responses_to_memory(
     user_id: int,
     memory_store: MemoryStore,
     llm,
-    transcripts_by_response_id: Optional[Dict[str, str]] = None,
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     Ingests all QuestionnaireResponse rows for a user into the memory store
@@ -48,7 +47,9 @@ async def ingest_user_responses_to_memory(
           "likert_items": [...]
         }
     """
-    transcripts_by_response_id = transcripts_by_response_id or {}
+    # We always read transcripts from the DB `transcription` column when available.
+    # Clients should not pass transcripts to this function; transcription should
+    # be stored in the `QuestionnaireResponse.transcription` field.
 
     # Load all responses for the user
     responses = await db.questionnaireresponse.find_many(
@@ -65,12 +66,14 @@ async def ingest_user_responses_to_memory(
         q_type = question.type  # "AUDIO" or "LIKERT"
 
         if q_type == "AUDIO":
-            transcript = transcripts_by_response_id.get(resp.id)
+            # Read stored transcription from the DB if present
+            transcript = getattr(resp, "transcription", None)
+
+            # If missing, fall back to audio path + STT (may raise NotImplementedError)
             if transcript is None:
                 if not resp.audioPath:
                     # No audio and no transcript — skip
                     continue
-                # Fallback to STT; will raise NotImplementedError unless you implement it
                 transcript = await transcribe_audio(resp.audioPath)
 
             summary_data = await summarize_audio_answer(
@@ -92,13 +95,10 @@ async def ingest_user_responses_to_memory(
             }
             audio_items.append(audio_item)
 
-            # Build memory content
-            content = (
-                f"Question: {question.text}\n"
-                f"Type: AUDIO\n\n"
-                f"Transcript:\n{transcript}\n\n"
-                f"Summary:\n{audio_item['summary']}"
-            )
+            # Build a compact RAG chunk: use the concise summary as the primary content
+            # (keeps vector store efficient and focused). We still store metadata with
+            # the original transcript and other signals for context.
+            content = f"Q: {question.text}\nSummary: {audio_item['summary']}"
 
             metadata: Dict[str, Any] = {
                 "source": "questionnaire_audio",
@@ -110,6 +110,8 @@ async def ingest_user_responses_to_memory(
                 "facts": audio_item["facts"],
                 "preferences": audio_item["preferences"],
                 "signals": audio_item["signals"],
+                # Keep the original transcript for debugging / provenance
+                "transcript": transcript,
             }
 
             await memory_store.upsert_memory(

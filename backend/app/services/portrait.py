@@ -16,7 +16,6 @@ async def build_personality_portrait_for_user(
     user_id: int,
     memory_store,
     llm,
-    transcripts_by_response_id: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """
     High-level orchestration for building a personality portrait:
@@ -33,7 +32,6 @@ async def build_personality_portrait_for_user(
         user_id=user_id,
         memory_store=memory_store,
         llm=llm,
-        transcripts_by_response_id=transcripts_by_response_id,
     )
 
     audio_items = items["audio_items"]
@@ -99,7 +97,6 @@ async def example_run(user_id: int) -> None:
         user_id=user_id,
         memory_store=memory_store,
         llm=llm,
-        transcripts_by_response_id=None,  # or pass a dict of {response_id: transcript}
     )
 
     print(json.dumps(persona, ensure_ascii=False, indent=2))

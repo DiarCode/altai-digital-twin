@@ -6,6 +6,9 @@ from typing import Any, Dict, List
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
+from app.core.config import settings
+from app.services.llm import get_llm_and_embeddings
+import asyncio
 
 
 async def summarize_audio_answer(
@@ -38,12 +41,12 @@ async def summarize_audio_answer(
                     "Return ONLY valid JSON with keys: "
                     "summary, facts, preferences, signals.\n"
                     "Example format:\n"
-                    "{\n"
+                    "{{\n"
                     "  \"summary\": \"...\",\n"
                     "  \"facts\": [\"...\"],\n"
                     "  \"preferences\": [\"...\"],\n"
-                    "  \"signals\": {\"introversion\": 0.7, \"risk_tolerance\": 0.3}\n"
-                    "}\n"
+                    "  \"signals\": {{\"introversion\": 0.7, \"risk_tolerance\": 0.3}}\n"
+                    "}}\n"
                 ),
             ),
             (
@@ -58,9 +61,45 @@ async def summarize_audio_answer(
     )
 
     chain = prompt | llm | StrOutputParser()
-    raw = await chain.ainvoke(
-        {"question_text": question_text, "transcript": transcript}
-    )
+
+    try:
+        raw = await chain.ainvoke(
+            {"question_text": question_text, "transcript": transcript}
+        )
+    except Exception as e:
+        # Detect quota / resource errors and attempt fallbacks if configured.
+        msg = str(e).lower()
+        if ("quota" in msg) or ("resourceexhausted" in msg) or ("429" in msg):
+            fallbacks = []
+            if settings.CHAT_MODEL_FALLBACKS:
+                fallbacks = [m.strip() for m in settings.CHAT_MODEL_FALLBACKS.split(",") if m.strip()]
+
+            # Append a small default fallback if none configured
+            if not fallbacks:
+                fallbacks = ["gemini-mini"]
+
+            # Try fallbacks sequentially (one retry per fallback)
+            for fb_model in fallbacks:
+                try:
+                    # create a fresh llm with the fallback model and retry
+                    fb_llm, _ = get_llm_and_embeddings(chat_model=fb_model)
+                    fb_chain = prompt | fb_llm | StrOutputParser()
+                    # small backoff to avoid immediate throttling
+                    await asyncio.sleep(1)
+                    raw = await fb_chain.ainvoke({"question_text": question_text, "transcript": transcript})
+                    # if successful, break out
+                    break
+                except Exception:
+                    # try next fallback
+                    raw = None
+                    continue
+
+            if raw is None:
+                # All fallbacks failed; re-raise original exception
+                raise
+        else:
+            # Not a quota-like error — propagate
+            raise
 
     try:
         data = json.loads(raw)

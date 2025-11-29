@@ -4,7 +4,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "altai-digital-twin"
     DEBUG: bool = True
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/altai"
-    VECTOR_DB_URL: str = ""
+    VECTOR_DB_URL: str | None = None
     JWT_SECRET_KEY: str = "super-secret-change-me"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day by default
@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     AVATAR_API_URL: str | None = None
     AVATAR_API_KEY: str | None = None
     ELEVENLABS_API_KEY: str | None = None
+    # Model configuration (override defaults). CHAT_MODEL_FALLBACKS is a
+    # comma-separated list of model names to try when the primary model
+    # hits quota or other model-specific errors.
+    CHAT_MODEL: str | None = None
+    EMBEDDING_MODEL: str | None = None
+    CHAT_MODEL_FALLBACKS: str | None = None
 
     # S3 Settings
     S3_BUCKET_NAME: str = "altai-digital-twin-audio"
@@ -39,6 +45,8 @@ class Settings(BaseSettings):
     S3_REGION: str | None = None
 
     # Add other settings and secrets here
+    # Qdrant / vector DB settings
+    VECTOR_SIZE: int | None = None
 
     class Config:
         env_file = ".env"

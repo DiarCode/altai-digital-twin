@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import date
+from datetime import date, datetime
 from ._base import CamelModel
 
 
@@ -20,7 +20,7 @@ class UserOut(CamelModel):
     username: str
     gender: str | None
     birthdate: date | None
-    created_at: str
+    created_at: datetime
 
     class Config:
         from_attributes = True

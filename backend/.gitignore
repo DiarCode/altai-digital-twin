@@ -23,9 +23,6 @@ venv/
 # pytest cache
 .pytest_cache/
 
-# Migrations
-prisma/migrations/
-
 # IDE
 .idea/
 
