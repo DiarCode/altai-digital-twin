@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     COOKIE_HTTPONLY: bool = True
     COOKIE_SAMESITE: str = "lax"
     COOKIE_EXPIRE_MINUTES: int = 60 * 24
+    # Security: optional pepper for password hashing
+    PASSWORD_PEPPER: str | None = None
+
+    # LLM / Avatar / Interview service endpoints and credentials
+    LLM_API_URL: str | None = None
+    LLM_API_KEY: str | None = None
+    AVATAR_API_URL: str | None = None
+    AVATAR_API_KEY: str | None = None
     # Add other settings and secrets here
 
     class Config:

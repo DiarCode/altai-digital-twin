@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from ._base import CamelModel
 
-class HealthResponse(BaseModel):
+class HealthResponse(CamelModel):
     status: str

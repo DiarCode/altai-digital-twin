@@ -13,40 +13,44 @@ model User {
   password              String
   gender                String
   birthdate             DateTime
-  createdAt             DateTime               @default(now())
-  userOnboardingAnswers UserOnboardingAnswer[]
+  createdAt             DateTime               @default(now()) @map("created_at")
+  userInterviewAnswers UserInterviewAnswer[]
 }
 
-model OnboardingQuestion {
+model InterviewQuestion {
   id        Int                @id @default(autoincrement())
   question  String
-  createdAt DateTime           @default(now())
-  answers   OnboardingAnswer[]
+  createdAt DateTime           @default(now()) @map("created_at")
+  answers   InterviewAnswer[]
+  @@map("OnboardingQuestion")
 }
 
-model OnboardingAnswer {
+model InterviewAnswer {
   id                    Int                    @id @default(autoincrement())
   answer                String
-  createdAt             DateTime               @default(now())
-  onboardingQuestionId  Int
-  onboardingQuestion    OnboardingQuestion     @relation(fields: [onboardingQuestionId], references: [id])
-  userOnboardingAnswers UserOnboardingAnswer[]
+  createdAt             DateTime               @default(now()) @map("created_at")
+  interviewQuestionId  Int                    @map("onboarding_question_id")
+  interviewQuestion    InterviewQuestion      @relation(fields: [interviewQuestionId], references: [id])
+  userInterviewAnswers UserInterviewAnswer[]
+  @@map("OnboardingAnswer")
 }
 
-model UserOnboardingAnswer {
+model UserInterviewAnswer {
   id                 Int                @id @default(autoincrement())
-  userId             Int
-  onboardingAnswerId Int
-  createdAt          DateTime           @default(now())
+  userId             Int                @map("user_id")
+  interviewAnswerId Int                @map("onboarding_answer_id")
+  createdAt          DateTime           @default(now()) @map("created_at")
   user               User               @relation(fields: [userId], references: [id])
-  onboardingAnswer   OnboardingAnswer   @relation(fields: [onboardingAnswerId], references: [id])
-  questionAnalyses   QuestionAnalysis[]
+  interviewAnswer   InterviewAnswer   @relation(fields: [interviewAnswerId], references: [id])
+  answerAnalyses   AnswerAnalysis[]
+  @@map("UserOnboardingAnswer")
 }
 
-model QuestionAnalysis {
-  id                 Int                  @id @default(autoincrement())
-  userAnswerId       Int
-  analysisData       String
-  createdAt          DateTime             @default(now())
-  userAnswer         UserOnboardingAnswer @relation(fields: [userAnswerId], references: [id])
+model AnswerAnalysis {
+  id           Int                  @id @default(autoincrement())
+  userAnswerId Int                  @map("user_answer_id")
+  analysisData String               @map("analysis_data")
+  createdAt    DateTime             @default(now()) @map("created_at")
+  userAnswer   UserInterviewAnswer @relation(fields: [userAnswerId], references: [id])
+  @@map("QuestionAnalysis")
 }

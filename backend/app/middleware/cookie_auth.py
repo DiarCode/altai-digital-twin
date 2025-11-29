@@ -5,6 +5,7 @@ from typing import Callable
 import jwt
 from app.core.config import settings
 from app.db import client
+from app.services import auth as auth_service
 from fastapi import HTTPException
 
 
@@ -13,18 +14,8 @@ class CookieAuthMiddleware(BaseHTTPMiddleware):
         # Extract token from cookie
         token = request.cookies.get(settings.COOKIE_NAME)
         if token:
-            try:
-                payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-                user_id = payload.get("user_id")
-                if user_id is not None:
-                    user = await client.user.find_unique(where={"id": int(user_id)})
-                    # attach user to request state
-                    request.state.user = user
-            except jwt.ExpiredSignatureError:
-                # token expired, ignore (user remains None)
-                request.state.user = None
-            except jwt.PyJWTError:
-                request.state.user = None
+                user = await auth_service.get_user_from_token(token)
+                request.state.user = user
         else:
             request.state.user = None
 
