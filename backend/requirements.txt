@@ -11,3 +11,6 @@ bcrypt
 pyjwt
 qdrant-client
 uv
+elevenlabs
+langchain-google-genai
+langchain

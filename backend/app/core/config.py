@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     LLM_API_KEY: str | None = None
     AVATAR_API_URL: str | None = None
     AVATAR_API_KEY: str | None = None
+    ELEVENLABS_API_KEY: str | None = None
 
     # S3 Settings
     S3_BUCKET_NAME: str = "altai-digital-twin-audio"

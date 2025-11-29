@@ -4,6 +4,7 @@ from typing import List
 from app.api.v1.schemas.questionnaire import QuestionDTO, QuestionType
 from app.services import questionnaire as questionnaire_service
 from app.services.s3 import s3_service
+from app.services.stt import stt_service
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -39,11 +40,20 @@ async def answer_question(
 ):
     likert_value = None
     audio_path = None
+    transcription = None
 
     if answer is not None:
         likert_value = answer
     
     if audio is not None:
+        # Read content for STT
+        content = await audio.read()
+        # Reset cursor for S3 upload
+        await audio.seek(0)
+        
+        # Transcribe
+        transcription = await stt_service.transcribe(content, audio.filename)
+
         extension = audio.filename.split(".")[-1] if "." in audio.filename else "wav"
         object_name = f"{user.id}/{question_id}/audio.{extension}"
         s3_path = s3_service.upload_file(audio.file, object_name)
@@ -58,6 +68,7 @@ async def answer_question(
         user_id=user.id,
         question_id=question_id,
         likert_value=likert_value,
-        audio_path=audio_path
+        audio_path=audio_path,
+        transcription=transcription
     )
     return {"status": "success", "id": response.id}

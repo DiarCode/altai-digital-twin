@@ -18,7 +18,8 @@ async def save_response(
     user_id: int, 
     question_id: str, 
     likert_value: int | None = None, 
-    audio_path: str | None = None
+    audio_path: str | None = None,
+    transcription: str | None = None
 ) -> QuestionnaireResponse:
     return await client.questionnaireresponse.upsert(
         where={
@@ -32,11 +33,13 @@ async def save_response(
                 "userId": user_id,
                 "questionId": question_id,
                 "likertValue": likert_value,
-                "audioPath": audio_path
+                "audioPath": audio_path,
+                "transcription": transcription
             },
             "update": {
                 "likertValue": likert_value,
-                "audioPath": audio_path
+                "audioPath": audio_path,
+                "transcription": transcription
             }
         }
     )
