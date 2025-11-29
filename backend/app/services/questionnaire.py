@@ -20,11 +20,23 @@ async def save_response(
     likert_value: int | None = None, 
     audio_path: str | None = None
 ) -> QuestionnaireResponse:
-    return await client.questionnaireresponse.create(
+    return await client.questionnaireresponse.upsert(
+        where={
+            "userId_questionId": {
+                "userId": user_id,
+                "questionId": question_id
+            }
+        },
         data={
-            "userId": user_id,
-            "questionId": question_id,
-            "likertValue": likert_value,
-            "audioPath": audio_path
+            "create": {
+                "userId": user_id,
+                "questionId": question_id,
+                "likertValue": likert_value,
+                "audioPath": audio_path
+            },
+            "update": {
+                "likertValue": likert_value,
+                "audioPath": audio_path
+            }
         }
     )

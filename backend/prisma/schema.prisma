@@ -44,4 +44,6 @@ model QuestionnaireResponse {
 
   user       User                  @relation(fields: [userId], references: [id])
   question   QuestionnaireQuestion @relation(fields: [questionId], references: [id])
+
+  @@unique([userId, questionId])
 }
