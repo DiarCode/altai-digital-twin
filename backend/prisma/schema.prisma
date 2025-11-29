@@ -7,25 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum InterviewStatus {
-  IN_PROGRESS
-  COMPLETED
-  ABORTED
-}
-
-enum InsightKind {
-  MICRO_SUMMARY
-  FACTS
-  EMOTION_PROFILE
-  OTHER
-}
-
-enum MemoryKind {
-  ANSWER
-  SUMMARY
-  FACT
-}
-
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
@@ -33,113 +14,8 @@ model User {
   gender    String
   birthdate DateTime
   createdAt DateTime @default(now()) @map("created_at")
-
-  // 1:n relations
-  interviewSessions InterviewSession[]
-  personaSnapshots  PersonaSnapshot[]
-  userAnswers       UserAnswer[]
-  memoryChunks      MemoryChunk[]
-  themeSummaries    ThemeSummary[]
+  
   questionnaireResponses QuestionnaireResponse[]
-}
-
-model InterviewSession {
-  id          Int             @id @default(autoincrement())
-  userId      Int             @map("user_id")
-  status      InterviewStatus @default(IN_PROGRESS)
-  startedAt   DateTime        @default(now()) @map("started_at")
-  completedAt DateTime?       @map("completed_at")
-  notes       String?
-
-  user           User            @relation(fields: [userId], references: [id])
-  userAnswers    UserAnswer[]
-  themeSummaries ThemeSummary[]
-  memoryChunks   MemoryChunk[]
-}
-
-model InterviewQuestion {
-  id          Int      @id @default(autoincrement())
-  key         String?  @unique         // e.g. "childhood_1"
-  question    String
-  description String?
-  theme       String?                   // "childhood", "values", ...
-  tags        String[] @default([])   // Postgres text[]
-  order       Int?
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  userAnswers UserAnswer[]
-}
-
-model UserAnswer {
-  id                  Int               @id @default(autoincrement())
-  userId              Int               @map("user_id")
-  interviewSessionId  Int               @map("interview_session_id")
-  interviewQuestionId Int               @map("interview_question_id")
-
-  rawText             String            @map("raw_text")
-  audioUrl            String?           @map("audio_url")
-  language            String?
-  importance          Int               @default(1)
-  createdAt           DateTime          @default(now()) @map("created_at")
-
-  user                User              @relation(fields: [userId], references: [id])
-  session             InterviewSession  @relation(fields: [interviewSessionId], references: [id])
-  question            InterviewQuestion @relation(fields: [interviewQuestionId], references: [id])
-
-  insights            AnswerInsight[]
-  memoryChunks        MemoryChunk[]
-}
-
-model AnswerInsight {
-  id           Int         @id @default(autoincrement())
-  userAnswerId Int         @map("user_answer_id")
-  kind         InsightKind @default(MICRO_SUMMARY)
-  data         Json
-  createdAt    DateTime    @default(now()) @map("created_at")
-
-  userAnswer   UserAnswer  @relation(fields: [userAnswerId], references: [id])
-}
-
-model MemoryChunk {
-  id                 Int               @id @default(autoincrement())
-  userId             Int               @map("user_id")
-  userAnswerId       Int?              @map("user_answer_id")
-  interviewSessionId Int?              @map("interview_session_id")
-
-  kind               MemoryKind        @default(ANSWER)
-  content            String
-  metadata           Json?
-  qdrantPointId      String?           @map("qdrant_point_id")
-  createdAt          DateTime          @default(now()) @map("created_at")
-
-  user               User              @relation(fields: [userId], references: [id])
-  userAnswer         UserAnswer?       @relation(fields: [userAnswerId], references: [id])
-  session            InterviewSession? @relation(fields: [interviewSessionId], references: [id])
-}
-
-model ThemeSummary {
-  id                 Int               @id @default(autoincrement())
-  userId             Int               @map("user_id")
-  interviewSessionId Int?              @map("interview_session_id")
-  theme              String
-  summary            String
-  data               Json?
-  createdAt          DateTime          @default(now()) @map("created_at")
-
-  user               User              @relation(fields: [userId], references: [id])
-  session            InterviewSession? @relation(fields: [interviewSessionId], references: [id])
-}
-
-model PersonaSnapshot {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  source    String   @default("INTERVIEW")
-  version   Int      @default(1)
-  summary   String
-  data      Json
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user      User     @relation(fields: [userId], references: [id])
 }
 
 enum QuestionnaireQuestionType {
