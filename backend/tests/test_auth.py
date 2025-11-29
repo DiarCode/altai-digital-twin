@@ -22,6 +22,7 @@ async def test_register_login(monkeypatch):
         "gender": "m",
         "birthdate": date(1990, 1, 1),
         "createdAt": "2025-01-01T00:00:00Z",
+        "created_at": "2025-01-01T00:00:00Z",
     }
 
     async def fake_find_unique(where):
@@ -30,10 +31,14 @@ async def test_register_login(monkeypatch):
         return None
 
     async def fake_create(data):
-        return {**{"id": 2}, **data, "createdAt": "2025-01-01T00:00:00Z"}
+        return {**{"id": 2}, **data, "createdAt": "2025-01-01T00:00:00Z", "created_at": "2025-01-01T00:00:00Z"}
 
-    monkeypatch.setattr(db_module.client.user, "find_unique", fake_find_unique)
-    monkeypatch.setattr(db_module.client.user, "create", fake_create)
+    # Service-level register_user handles uniqueness validation; patch service instead of DB directly
+    from app.services import auth as auth_service
+    async def fake_register(user_in):
+        return {**{"id": 2}, **user_in.dict(), "created_at": "2025-01-01T00:00:00Z"}
+
+    monkeypatch.setattr(auth_service, "register_user", fake_register)
 
     async with AsyncClient(app=app, base_url="http://test") as ac:
         # register a new user
@@ -44,10 +49,9 @@ async def test_register_login(monkeypatch):
             "birthdate": "1995-01-01"
         })
         assert r.status_code == 200
+        assert "createdAt" in r.json()
         # login - monkeypatch auth_service to avoid actual bcrypt checking
-        from app.services import auth as auth_service
-
-        async def fake_auth(username, password):
+        async def fake_auth(login_in):
             return fake_user
 
         monkeypatch.setattr(auth_service, "authenticate_user", fake_auth)

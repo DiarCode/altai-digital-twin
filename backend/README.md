@@ -64,3 +64,11 @@ fetch('http://localhost:8000/api/v1/auth/login', {
 ```
 
 The cookie will be HTTP-only, so it can't be read from JS. The backend will use the cookie to determine the current authenticated user.
+
+Data shape conventions
+----------------------
+- Server side Python models use snake_case internally but API responses are returned in camelCase to clients using Pydantic aliasing (See `app/api/v1/schemas/_base.py` for the `CamelModel` base implemented here).
+- Controllers (FastAPI routes) accept Pydantic request schemas and pass typed objects to services, and services return database objects which controllers convert into typed Pydantic response schemas. This keeps a consistent typed shape across the controller/service boundary.
+ - A Prisma wrapper is added to `app/db` to centralize connections and prevent race conditions on startup.
+ - Prisma models around onboarding have been renamed to Interview models (InterviewQuestion, InterviewAnswer, UserInterviewAnswer, AnswerAnalysis) in code but still map to the old DB table names (`@@map`) for backwards compatibility.
+ - New placeholder services were added: `LLMService` (`app/services/llm.py`), `AvatarService` (`app/services/avatar.py`), and `InterviewService` (`app/services/interview.py`) to isolate model/ML and avatar logic and allow future implementation.

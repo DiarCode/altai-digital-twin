@@ -1,47 +1,72 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Optional
-import bcrypt
-import jwt
+from datetime import datetime as _dt, time as _time
+from app.core.utils.dates import date_to_datetime_min
+from app.api.v1.schemas.auth import UserCreate, UserLogin
+from app.core.utils import hash_password, verify_password, create_access_token, decode_access_token
 from app.core.config import settings
 from app.db import client
 
 
-def hash_password(plain_password: str) -> str:
-    hashed = bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt())
-    return hashed.decode("utf-8")
+# password and jwt helpers have been moved to `app.core.utils`
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-    return encoded_jwt
-
-
-async def create_user(username: str, password: str, gender: str, birthdate: str):
-    hashed = hash_password(password)
+async def create_user(user_in: UserCreate):
+    hashed = hash_password(user_in.password)
+    # convert birthdate (date) to datetime to satisfy prisma DateTime if needed
+    birthdate_val = None
+    if user_in.birthdate:
+        birthdate_val = date_to_datetime_min(user_in.birthdate)
     user = await client.user.create(data={
-        "username": username,
+        "username": user_in.username,
         "password": hashed,
-        "gender": gender,
-        "birthdate": birthdate,
+        "gender": user_in.gender or "",
+        "birthdate": birthdate_val,
     })
     return user
 
 
-async def authenticate_user(username: str, password: str):
-    user = await client.user.find_unique(where={"username": username})
+async def register_user(user_in: UserCreate):
+    # Check for existing username
+    existing = await client.user.find_unique(where={"username": user_in.username})
+    if existing:
+        raise ValueError("Username already registered")
+    return await create_user(user_in)
+
+
+async def authenticate_user(login_in: UserLogin):
+    user = await client.user.find_unique(where={"username": login_in.username})
     if not user:
         return None
-    if not verify_password(password, user.password):
+    if not verify_password(login_in.password, user.password):
         return None
     return user
+
+
+def create_token_for_user(user, expires_delta: Optional[timedelta] = None):
+    return create_access_token({"user_id": int(user.id)}, expires_delta=expires_delta)
+
+
+async def get_user_from_token(token: Optional[str]):
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        user_id = payload.get("user_id")
+        if not user_id:
+            return None
+        user = await client.user.find_unique(where={"id": int(user_id)})
+        return user
+    except Exception:
+        return None
+
+
+async def get_user_from_request(request):
+    # Middleware may have set user
+    user = getattr(request.state, "user", None)
+    if user:
+        return user
+    # fallback to token cookie
+    token = request.cookies.get(settings.COOKIE_NAME)
+    return await get_user_from_token(token)
