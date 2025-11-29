@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+#.env files
+.env
+.env.local
+.env.*.local
+
+# VSCode
+.vscode/
+
+# Distribution/build
+build/
+dist/
+*.egg-info/
+
+# Python virtual env
+.venv/
+venv/
+
+# pytest cache
+.pytest_cache/
+
+# Migrations
+prisma/migrations/
+
+# IDE
+.idea/
+
+# Docker files
+.env.docker
+
+# Node
+node_modules/
+
+# Packaging
+*.tar.gz
+
+# Local environment
+local_settings.py
+
+# Logs
+*.log

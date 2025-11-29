@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  db:
+    image: ankane/pgvector:latest
+    environment:
+      POSTGRES_USER: altai
+      POSTGRES_PASSWORD: altai
+      POSTGRES_DB: altai
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  # Optional vector DB or ML model store (Milvus / Weaviate / Redis) - replace as needed
+  # vector_db:
+  #   image: milvusdb/milvus:latest
+  #   ports:
+  #     - "19530:19530"
+  #     - "19121:19121"
+
+volumes:
+  db-data:
