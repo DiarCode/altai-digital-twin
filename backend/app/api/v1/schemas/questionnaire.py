@@ -11,7 +11,7 @@ class QuestionDTO(BaseModel):
     type: QuestionType
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class LikertAnswerCreate(BaseModel):
     question_id: str
