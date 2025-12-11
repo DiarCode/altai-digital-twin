@@ -26,3 +26,8 @@ async def shutdown_event():
 @app.get("/")
 async def root():
     return {"message": "Altai Digital Twin backend"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=settings.SERVER_PORT)
