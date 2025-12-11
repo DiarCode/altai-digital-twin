@@ -1,17 +1,33 @@
+name: digital-twin.
 version: "3.8"
 
 services:
-  db:
-    image: postgres:15
-    env_file: .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-altai}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-altai}
-      POSTGRES_DB: ${POSTGRES_DB:-altai}
+  postgres:
+    container_name: digital-postgres
+    image: postgres:17
     ports:
-      - "5433:5432"
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    env_file: .env
+
+  pgadmin:
+    container_name: digital-pgadmin
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    restart: unless-stopped
+    env_file: .env
 
   # Optional vector DB using Qdrant - this is our chosen vector store
   qdrant:
@@ -22,28 +38,12 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    env_file: .env
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@local}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-    ports:
-      - "8080:80"
-    depends_on:
-      - db
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-    restart: always
-
   minio:
+    container_name: digital-minio
     image: minio/minio:RELEASE.2025-02-18T16-25-55Z
-    container_name: altai-minio
     ports:
-      - "9000:9000"
-      - "9001:9001"
-    env_file:
-      - .env
+      - "9005:9000" # S3 API
+      - "9006:9001" # Web UI
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
@@ -55,11 +55,11 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    restart: always
+    restart: unless-stopped
 
   createbuckets:
+    container_name: digital-mc
     image: minio/mc
-    container_name: altai-mc
     depends_on:
       minio:
         condition: service_healthy

@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     APP_NAME: str = "altai-digital-twin"
     DEBUG: bool = True
+    SERVER_PORT: int = 8080
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/altai"
     VECTOR_DB_URL: str | None = None
     JWT_SECRET_KEY: str = "super-secret-change-me"
